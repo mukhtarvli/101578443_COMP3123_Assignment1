@@ -4,6 +4,8 @@ require("dotenv").config();
 const express = require("express");
 const helmet = require("helmet");
 const connectDB = require("./config/db");
+const userRoutes = require("./routes/userRoutes");
+const errorHandler = require("./middleware/errorHandler");
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -11,8 +13,11 @@ const PORT = process.env.PORT || 8081;
 // Add HTTP security headers
 app.use(helmet());
 
-// Allow the API to read JSON request bodies
+// Parse JSON BEFORE running the routes
 app.use(express.json());
+
+// Register user routes once
+app.use("/api/v1/user", userRoutes);
 
 // Health check: confirms that the server is running
 app.get("/health", (req, res) => {
@@ -28,6 +33,9 @@ app.use((req, res) => {
     error: "Route not found",
   });
 });
+
+// Handle errors AFTER all routes
+app.use(errorHandler);
 
 // Connect to MongoDB before starting the server
 async function startServer() {
