@@ -3,6 +3,7 @@ require("dotenv").config();
 
 const express = require("express");
 const helmet = require("helmet");
+const connectDB = require("./config/db");
 
 const app = express();
 const PORT = process.env.PORT || 8081;
@@ -28,7 +29,21 @@ app.use((req, res) => {
   });
 });
 
-// Start the server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+// Connect to MongoDB before starting the server
+async function startServer() {
+  try {
+    await connectDB();
+
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    // Avoid printing connection details that could contain credentials
+    console.error(
+      "Database connection failed. Check your .env and Atlas access settings."
+    );
+    process.exit(1);
+  }
+}
+
+startServer();
