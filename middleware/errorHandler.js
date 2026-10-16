@@ -1,29 +1,50 @@
+const logger = require("../utils/logger");
+
 // Centralized error handler: Express requires all four parameters
 function errorHandler(error, req, res, next) {
-  // Handle duplicate users, including simultaneous signup requests
+  if (res.headersSent) {
+    return next(error);
+  }
+
+  let status = 500;
+  let message = "Internal server error";
+  let reason = "unexpected_error";
+
+  // Handle duplicate usernames or emails
   if (error.code === 11000) {
-    return res.status(409).json({
-      error: "Username or email already exists",
-    });
+    status = 409;
+    message = "Username or email already exists";
+    reason = "duplicate_key";
   }
-
   // Handle incorrectly formatted JSON
-  if (error.type === "entity.parse.failed") {
-    return res.status(400).json({
-      error: "Invalid JSON request body",
-    });
+  else if (error.type === "entity.parse.failed") {
+    status = 400;
+    message = "Invalid JSON request body";
+    reason = "malformed_json";
   }
-
   // Handle Mongoose schema validation failures
-  if (error.name === "ValidationError") {
-    return res.status(400).json({
-      error: "Invalid data",
-    });
+  else if (error.name === "ValidationError") {
+    status = 400;
+    message = "Invalid data";
+    reason = "schema_validation";
+  }
+  // Handle invalid database IDs
+  else if (error.name === "CastError") {
+    status = 400;
+    message = "Invalid data format";
+    reason = "invalid_data_format";
   }
 
-  // Do not expose internal details to the client
-  return res.status(500).json({
-    error: "Internal server error",
+  // Record safe details without passwords, tokens, or database credentials
+  logger("request_error", {
+    method: req.method,
+    path: req.baseUrl + req.path,
+    status,
+    reason,
+  });
+
+  return res.status(status).json({
+    error: message,
   });
 }
 

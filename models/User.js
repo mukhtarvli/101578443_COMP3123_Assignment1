@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 
+
 // Define the fields each user document will contain
 const userSchema = new mongoose.Schema(
   {

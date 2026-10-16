@@ -1,20 +1,34 @@
 const mongoose = require("mongoose");
 
+let connectionPromise = null;
+
+// Reuse the database connection across requests
 async function connectDB() {
-  if (!process.env.MONGODB_URI) {
-    throw new Error("MONGODB_URI is missing from .env");
+  if (mongoose.connection.readyState === 1) {
+    return mongoose.connection;
   }
 
-  await mongoose.connect(process.env.MONGODB_URI, {
-    dbName: "comp3123_assignment1",
-  });
+  if (!process.env.MONGODB_URI) {
+    throw new Error("MONGODB_URI is not configured");
+  }
 
-  // Send a command to MongoDB and wait for its response
-  const result = await mongoose.connection.db.admin().ping();
+  // Share one connection attempt between simultaneous requests
+  if (!connectionPromise) {
+    connectionPromise = mongoose
+      .connect(process.env.MONGODB_URI, {
+        dbName: "comp3123_assignment1",
+        serverSelectionTimeoutMS: 10000,
+      })
+      .then(() => {
+        console.log("MongoDB connected successfully");
+        return mongoose.connection;
+      })
+      .finally(() => {
+        connectionPromise = null;
+      });
+  }
 
-  console.log("MongoDB connected successfully");
-  console.log("Database:", mongoose.connection.name);
-  console.log("Database ping:", result.ok);
+  return connectionPromise;
 }
 
 module.exports = connectDB;
