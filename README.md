@@ -316,15 +316,9 @@ These credentials are for assignment testing only:
 
 These are application accounts, not MongoDB database credentials.
 
-## Deployment
 
-The project is prepared for deployment to Vercel through GitHub.
+## Live API
 
-Configure `MONGODB_URI` and `JWT_SECRET` in the Vercel project's
-environment variables. Ensure MongoDB Atlas permits connections from
-the deployment environment.
+Base URL: https://101578443-comp-3123-assignment1.vercel.app
 
-`server.js` exports the Express application for Vercel and starts a
-local listener when run directly with Node.js.
-
-The deployed API URL will be added after deployment is verified.
+Health check: https://101578443-comp-3123-assignment1.vercel.app/health
